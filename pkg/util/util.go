@@ -22,6 +22,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	log "github.com/sirupsen/logrus"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -182,6 +184,14 @@ func DecodeNodeDevices(str string) ([]*DeviceInfo, error) {
 		}
 	}
 	return retval, nil
+}
+
+func DecodePairScores(pairScores string) (*DevicePairScores, error) {
+	devicePairScores := &DevicePairScores{}
+	if err := json.Unmarshal([]byte(pairScores), devicePairScores); err != nil {
+		return nil, err
+	}
+	return devicePairScores, nil
 }
 
 func EncodeNodeDevices(dlist []*DeviceInfo) string {
@@ -466,4 +476,17 @@ func GetDevicesUUIDList(infos []*DeviceInfo) []string {
 		uuids = append(uuids, info.ID)
 	}
 	return uuids
+}
+
+func LookupEnvBoolOr(key string, o bool) bool {
+	v, found := os.LookupEnv(key)
+	if found && v != "" {
+		d, err := strconv.ParseBool(v)
+		if err != nil {
+			log.WithField(key, v).WithError(err).Panic("failed to convert to bool")
+		} else {
+			return d
+		}
+	}
+	return o
 }
